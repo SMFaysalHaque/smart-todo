@@ -1,7 +1,11 @@
 import { type Request, type Response, type NextFunction } from "express";
 import mongoose from "mongoose";
 import { TodoModel } from "../models/todo.model.js";
-import { createTodoSchema, updateTodoSchema } from "../schemas/todo.schema.js";
+import {
+  createTodoSchema,
+  updateTodoSchema,
+  listTodosQuerySchema,
+} from "../schemas/todo.schema.js";
 import { sendValidationError } from "../utils/validation.js";
 
 type TodoDoc = InstanceType<typeof TodoModel>;
@@ -54,9 +58,35 @@ export async function getTodos(
     return;
   }
 
+  const parsed = listTodosQuerySchema.safeParse(req.query);
+  if (!parsed.success) {
+    sendValidationError(res, parsed.error);
+    return;
+  }
+
+  const { page, limit, completed, sort } = parsed.data;
+  const filter =
+    completed === undefined ? { userId } : { userId, completed };
+
   try {
-    const todos = await TodoModel.find({ userId });
-    res.status(200).json({ todos: todos.map(toTodoResponse) });
+    const skip = (page - 1) * limit;
+    const [todos, total] = await Promise.all([
+      TodoModel.find(filter).sort(sort).skip(skip).limit(limit),
+      TodoModel.countDocuments(filter),
+    ]);
+
+    const totalPages = Math.ceil(total / limit);
+    res.status(200).json({
+      data: todos.map(toTodoResponse),
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages,
+        hasNextPage: page < totalPages,
+        hasPreviousPage: page > 1,
+      },
+    });
   } catch (err) {
     next(err);
   }
