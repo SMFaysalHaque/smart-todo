@@ -4,6 +4,7 @@ import cookieParser from "cookie-parser";
 import mongoose from "mongoose";
 import { errorHandler } from "./middleware/errorHandler.js";
 import { authRouter } from "./routes/auth.routes.js";
+import { todoRouter } from "./routes/todo.routes.js";
 
 export function createApp(): Express {
   const app = express();
@@ -21,6 +22,7 @@ export function createApp(): Express {
   });
 
   app.use("/auth", authRouter);
+  app.use("/todos", todoRouter);
 
   app.use(errorHandler);
 
