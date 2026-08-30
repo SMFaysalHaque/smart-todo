@@ -1,10 +1,17 @@
-import "dotenv/config";
+import { env } from "./config/env.js";
+import { connectToDatabase } from "./config/db.js";
 import { createApp } from "./app.js";
 
-const PORT = Number(process.env.PORT) || 5000;
+async function start(): Promise<void> {
+  await connectToDatabase();
 
-const app = createApp();
+  const app = createApp();
+  app.listen(env.port, () => {
+    console.log(`Server running on http://localhost:${env.port}`);
+  });
+}
 
-app.listen(PORT, () => {
-  console.log(`Smart Todo backend running on http://localhost:${PORT}`);
+start().catch((error) => {
+  console.error("Failed to start the backend:", error);
+  process.exit(1);
 });
