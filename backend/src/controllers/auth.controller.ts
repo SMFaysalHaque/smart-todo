@@ -187,3 +187,26 @@ export async function logout(
     next(err);
   }
 }
+
+export async function me(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> {
+  const userId = req.user?.id;
+  if (!userId) {
+    res.status(401).json({ error: "Authentication required" });
+    return;
+  }
+
+  try {
+    const user = await UserModel.findById(userId);
+    if (!user) {
+      res.status(401).json({ error: "Authentication required" });
+      return;
+    }
+    res.status(200).json({ user: { id: String(user._id), email: user.email } });
+  } catch (err) {
+    next(err);
+  }
+}
