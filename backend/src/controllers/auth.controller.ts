@@ -3,7 +3,15 @@ import bcrypt from "bcryptjs";
 import { type ZodError } from "zod";
 import { registerSchema, loginSchema } from "../schemas/auth.schema.js";
 import { UserModel } from "../models/user.model.js";
+import { AuthSessionModel } from "../models/authSession.model.js";
 import { signAccessToken } from "../utils/jwt.js";
+import { generateRefreshToken, hashRefreshToken } from "../utils/refreshToken.js";
+import {
+  REFRESH_COOKIE_NAME,
+  REFRESH_TOKEN_TTL_MS,
+  refreshCookieOptions,
+  clearRefreshCookieOptions,
+} from "../config/cookie.js";
 
 function isDuplicateKeyError(err: unknown): boolean {
   return (
@@ -22,6 +30,10 @@ function sendValidationError(res: Response, error: ZodError): void {
       message: issue.message,
     })),
   });
+}
+
+function refreshExpiryDate(): Date {
+  return new Date(Date.now() + REFRESH_TOKEN_TTL_MS);
 }
 
 export async function register(
@@ -76,11 +88,101 @@ export async function login(
       return;
     }
 
+    const rawRefreshToken = generateRefreshToken();
+    await AuthSessionModel.create({
+      userId: user._id,
+      tokenHash: hashRefreshToken(rawRefreshToken),
+      expiresAt: refreshExpiryDate(),
+    });
+    res.cookie(REFRESH_COOKIE_NAME, rawRefreshToken, refreshCookieOptions);
+
     const accessToken = signAccessToken(String(user._id));
     res.status(200).json({
       accessToken,
       user: { id: String(user._id), email: user.email },
     });
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function refresh(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> {
+  const rawToken: unknown = req.cookies?.[REFRESH_COOKIE_NAME];
+  if (typeof rawToken !== "string") {
+    res.status(401).json({ error: "Authentication required" });
+    return;
+  }
+
+  const tokenHash = hashRefreshToken(rawToken);
+
+  try {
+    const session = await AuthSessionModel.findOne({ tokenHash });
+
+    if (!session) {
+      // The token matches no active session. If it was the immediately
+      // previous (already-rotated) token, this is a reuse attempt: destroy
+      // that session so a stolen token cannot be leveraged further.
+      const reused = await AuthSessionModel.findOne({
+        previousTokenHash: tokenHash,
+      });
+      if (reused) {
+        await reused.deleteOne();
+      }
+      res.clearCookie(REFRESH_COOKIE_NAME, clearRefreshCookieOptions);
+      res.status(401).json({ error: "Authentication required" });
+      return;
+    }
+
+    if (session.expiresAt.getTime() <= Date.now()) {
+      await session.deleteOne();
+      res.clearCookie(REFRESH_COOKIE_NAME, clearRefreshCookieOptions);
+      res.status(401).json({ error: "Authentication required" });
+      return;
+    }
+
+    const user = await UserModel.findById(session.userId);
+    if (!user) {
+      await session.deleteOne();
+      res.clearCookie(REFRESH_COOKIE_NAME, clearRefreshCookieOptions);
+      res.status(401).json({ error: "Authentication required" });
+      return;
+    }
+
+    const newRawToken = generateRefreshToken();
+    session.previousTokenHash = session.tokenHash;
+    session.tokenHash = hashRefreshToken(newRawToken);
+    session.expiresAt = refreshExpiryDate();
+    await session.save();
+
+    res.cookie(REFRESH_COOKIE_NAME, newRawToken, refreshCookieOptions);
+
+    const accessToken = signAccessToken(String(user._id));
+    res.status(200).json({
+      accessToken,
+      user: { id: String(user._id), email: user.email },
+    });
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function logout(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> {
+  const rawToken: unknown = req.cookies?.[REFRESH_COOKIE_NAME];
+
+  try {
+    if (typeof rawToken === "string") {
+      await AuthSessionModel.deleteOne({ tokenHash: hashRefreshToken(rawToken) });
+    }
+    res.clearCookie(REFRESH_COOKIE_NAME, clearRefreshCookieOptions);
+    res.status(200).json({ message: "Logged out" });
   } catch (err) {
     next(err);
   }

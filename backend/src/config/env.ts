@@ -16,4 +16,5 @@ export const env = {
   port: Number(PORT) || 5000,
   mongodbUri: MONGODB_URI,
   jwtSecret: JWT_SECRET,
+  isProduction: process.env.NODE_ENV === "production",
 };
