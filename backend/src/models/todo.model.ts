@@ -1,4 +1,5 @@
 import { Schema, model } from "mongoose";
+import { emptyRichTextDoc } from "../schemas/richText.schema.js";
 
 const todoSchema = new Schema(
   {
@@ -9,7 +10,7 @@ const todoSchema = new Schema(
       index: true,
     },
     title: { type: String, required: true, trim: true, maxlength: 200 },
-    content: { type: String, default: "" },
+    content: { type: Schema.Types.Mixed, default: emptyRichTextDoc },
     completed: { type: Boolean, default: false },
   },
   { timestamps: true },

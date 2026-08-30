@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { richTextDocSchema, emptyRichTextDoc } from "./richText.schema.js";
 
 export const createTodoSchema = z.object({
   title: z
@@ -6,7 +7,7 @@ export const createTodoSchema = z.object({
     .trim()
     .min(1, "Title is required")
     .max(200, "Title must be at most 200 characters"),
-  content: z.string().default(""),
+  content: richTextDocSchema.default(emptyRichTextDoc),
   completed: z.boolean().optional(),
 });
 
@@ -17,7 +18,7 @@ export const updateTodoSchema = z.object({
     .min(1, "Title is required")
     .max(200, "Title must be at most 200 characters")
     .optional(),
-  content: z.string().optional(),
+  content: richTextDocSchema.optional(),
   completed: z.boolean().optional(),
 });
 
