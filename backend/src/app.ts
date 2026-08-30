@@ -2,6 +2,7 @@ import express, { type Express, type Request, type Response } from "express";
 import cors from "cors";
 import mongoose from "mongoose";
 import { errorHandler } from "./middleware/errorHandler.js";
+import { authRouter } from "./routes/auth.routes.js";
 
 export function createApp(): Express {
   const app = express();
@@ -16,6 +17,8 @@ export function createApp(): Express {
       database: databaseConnected ? "connected" : "disconnected",
     });
   });
+
+  app.use("/auth", authRouter);
 
   app.use(errorHandler);
 
