@@ -1,0 +1,31 @@
+# ---------------------------------------------------------------------------
+# Root .gitignore for the Smart Todo monorepo (frontend + backend).
+# Each app also has its own .gitignore; this covers shared/root-level concerns.
+# ---------------------------------------------------------------------------
+
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+.next/
+out/
+build/
+
+# Environment variables — never commit real secrets
+.env
+.env.*
+!.env.example
+
+# Private learning notes — personal, not part of the codebase
+note/
+
+# Logs
+*.log
+npm-debug.log*
+
+# Editor / OS files
+.DS_Store
+.vscode/
+.idea/
+*.tsbuildinfo
