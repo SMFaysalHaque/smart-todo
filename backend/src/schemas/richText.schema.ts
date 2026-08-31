@@ -32,19 +32,6 @@ const hardBreakNode = z.object({ type: z.literal("hardBreak") }).strict();
 
 const inlineNode = z.union([textNode, hardBreakNode]);
 
-const imageNode = z
-  .object({
-    type: z.literal("image"),
-    attrs: z
-      .object({
-        src: z.url(),
-        alt: z.string().optional(),
-        title: z.string().optional(),
-      })
-      .strict(),
-  })
-  .strict();
-
 // blockNode is recursive (lists contain items that contain blocks), so it is
 // defined lazily.
 const blockNode: z.ZodType = z.lazy(() =>
@@ -54,7 +41,6 @@ const blockNode: z.ZodType = z.lazy(() =>
     bulletListNode,
     orderedListNode,
     taskListNode,
-    imageNode,
   ]),
 );
 
