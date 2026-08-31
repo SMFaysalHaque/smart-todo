@@ -1,127 +1,87 @@
-# Smart Todo
+# Smart Todo — Full-Stack Rich-Text Task Manager
 
-A full-stack todo application with a public landing page and an authenticated app
-where each user manages their own todos, including **rich-text content** stored as
-structured JSON. It's built as a portfolio project to demonstrate real full-stack
-engineering: authentication, authorization/ownership, API design, validation,
-MongoDB, a structured Next.js frontend, and a rich-text editor.
+A production-style todo application: a public landing page plus an authenticated
+app where each user manages their own todos. Todo notes are written in a
+**rich-text editor** and stored as structured JSON (not HTML), validated on the
+server. Built to demonstrate real full-stack engineering — authentication,
+per-user authorization, API design, schema validation, and a clean, typed
+frontend architecture.
 
-> Status: local development project. No public deployment URL, screenshots, or
-> usage metrics are claimed here — everything described below maps to code in this
-> repository.
+**Live backend API:** https://smart-todo-2o4n.onrender.com (health check at
+`/health`)
+**Frontend:** Next.js app deployed on Vercel (configure `NEXT_PUBLIC_API_URL` to
+point at the API).
 
-## Key Features
+---
 
-- **Secure authentication** — register/login with JWT access tokens; passwords
-  hashed with bcrypt.
-- **Rich-text todo editor** — Tiptap editor supporting bold, italic, headings,
-  bullet lists, ordered lists, task/checkbox lists, text color, and font weight.
-- **Structured content** — todo notes are stored as **Tiptap JSON** (not HTML),
-  validated on the backend against a controlled schema.
-- **Full Todo CRUD** — create, read, edit, and delete.
-- **Completion status** — mark todos complete/incomplete.
-- **Filtering** — All / Active / Completed (done via the backend query).
+## Features
+
+- **Authentication** — email/password register and login with JWT access tokens;
+  passwords hashed with bcrypt.
+- **Rich-text notes** — Tiptap editor: bold, italic, headings, bullet lists,
+  ordered lists, task/checkbox lists, text color, and font weight.
+- **Structured storage** — note content is stored as Tiptap JSON and validated on
+  the backend against a controlled node/mark allow-list.
+- **Full CRUD** — create, read, edit, and delete todos.
+- **Completion** — mark todos complete/incomplete; completing a todo ticks its
+  checklists and renders the note as "done".
+- **Filtering** — All / Active / Completed, resolved by the backend query.
 - **Pagination** — database-level pagination with Previous/Next controls.
-- **Per-user ownership** — every todo is scoped to the authenticated user.
-- **Responsive UI** with a system-aware **light/dark theme**.
+- **Per-user ownership** — a user can only ever see and modify their own todos.
+- **Responsive UI** with a system-aware light/dark theme.
 
-_Not implemented (intentionally out of scope): image upload, search,
-collaboration, notifications, analytics, AI features._
+### Scope
+
+The feature set is intentionally focused. There is **no** image upload, search,
+collaboration, notifications, or analytics — each was deliberately left out to
+keep the surface small and every line of code meaningful.
+
+---
 
 ## Tech Stack
 
-**Frontend** — Next.js (App Router), TypeScript, Tailwind CSS, Tiptap, React Hook
-Form, Zod, next-themes.
+**Frontend**
 
-**Backend** — Node.js, Express.js, TypeScript, MongoDB, Mongoose, Zod, JWT,
-bcrypt.
+| Concern         | Choice                                  |
+| --------------- | --------------------------------------- |
+| Framework       | Next.js (App Router)                    |
+| Language        | TypeScript (strict)                     |
+| Styling         | Tailwind CSS                            |
+| Rich-text       | Tiptap v2 (ProseMirror)                 |
+| Forms & schema  | React Hook Form + Zod                   |
+| Theme           | next-themes (light / dark / system)     |
+| HTTP            | Native `fetch`, one centralized client  |
 
-## Architecture Overview
+**Backend**
 
-The frontend and backend are independent apps. The frontend calls the backend over
-HTTP through a single centralized API client (`frontend/src/lib/api-client.ts`).
+| Concern         | Choice                                  |
+| --------------- | --------------------------------------- |
+| Runtime         | Node.js                                 |
+| Framework       | Express.js                              |
+| Language        | TypeScript (strict)                     |
+| Database        | MongoDB + Mongoose                      |
+| Validation      | Zod (at every request boundary)         |
+| Auth            | JWT (jsonwebtoken) + bcrypt (bcryptjs)  |
+| Sessions        | Opaque refresh tokens, SHA-256 hashed   |
 
-```
-Browser
-  → Next.js frontend (React components & pages)
-  → Central API client (src/lib/api-client.ts — attaches the JWT)
-  → Express.js API (REST routes)
-  → Auth middleware (verifies the JWT → req.user.id)
-  → Zod validation (checks the request data)
-  → MongoDB / Mongoose (owner-scoped queries)
-```
+### Why these choices
 
-### Authentication
+- **Tiptap + JSON, not HTML.** Storing structured JSON keeps content easy to
+  validate and safe to render, and avoids storing arbitrary HTML. The backend only
+  accepts a small, explicit set of nodes and marks.
+- **Zod on both sides.** The same validation philosophy runs on the client (form
+  UX) and the server (trust boundary). The server never trusts client input.
+- **One API client.** All HTTP lives in `frontend/src/lib/api-client.ts` — typed
+  helpers, automatic `Bearer` injection, and normalized errors — so no component
+  ever calls `fetch` directly.
+- **Feature-based frontend.** Code is grouped by feature (`auth`, `todos`) rather
+  than by file type, so a feature is easy to find and change in one place.
 
-Login returns a short-lived JWT access token (sent to the API as a
-`Bearer` token) plus a longer-lived refresh token stored in an HttpOnly cookie on
-the backend. The frontend uses simple access-token auth: it stores the access
-token and attaches it to API requests; the auth state lives in a small React
-context.
+---
 
-### Rich-text editor
+## Getting Started
 
-Todo notes are edited with Tiptap and stored as a JSON document. A shared editor
-configuration is reused by both the editor and the read-only preview. Because
-Tiptap can emit `null` attributes that the strict backend schema rejects, the
-frontend runs a small `cleanContent()` step before saving:
-
-```
-Tiptap editor → editor.getJSON() → cleanContent() → API client → Express → Zod → MongoDB
-```
-
-### Todo ownership
-
-Ownership is always enforced on the **backend**. Every read/update/delete query is
-scoped to `{ _id, userId }` using the ID from the verified token — the client never
-sends or chooses an owner. Another user's todo returns `404`.
-
-### Pagination / filtering / sorting
-
-Listing is done at the database level (`skip`/`limit`, a `completed` filter, and a
-whitelisted `sort`), and the API returns pagination metadata (`total`,
-`totalPages`, `hasNextPage`, `hasPreviousPage`).
-
-## API Overview (high level)
-
-| Method | Route            | Purpose                                   |
-| ------ | ---------------- | ----------------------------------------- |
-| POST   | `/auth/register` | Create an account                         |
-| POST   | `/auth/login`    | Log in, receive an access token           |
-| POST   | `/auth/refresh`  | Rotate the refresh token                  |
-| POST   | `/auth/logout`   | Invalidate the session                    |
-| GET    | `/auth/me`       | Current user (protected)                  |
-| GET    | `/todos`         | List own todos (page/limit/completed/sort)|
-| POST   | `/todos`         | Create a todo                             |
-| GET    | `/todos/:id`     | Get one of your todos                     |
-| PATCH  | `/todos/:id`     | Update a todo (partial)                   |
-| DELETE | `/todos/:id`     | Delete a todo                             |
-
-All `/todos` routes and `/auth/me` require a valid access token.
-
-## Project Structure
-
-```
-smart-todo/
-├── frontend/                Next.js app (App Router)
-│   └── src/
-│       ├── app/             routes: /, /login, /register, /todos
-│       ├── components/      ui/, shared/, home/ (landing sections)
-│       ├── features/        auth/ and todos/ (api, components, schemas, types)
-│       ├── lib/             api-client.ts, token.ts
-│       └── providers/       theme + auth providers
-├── backend/                 Express + TypeScript REST API
-│   └── src/
-│       ├── config/          env, db, cookie
-│       ├── controllers/     auth, todo
-│       ├── middleware/       requireAuth, errorHandler
-│       ├── models/          user, todo, authSession
-│       ├── routes/          auth, todo
-│       └── schemas/         Zod schemas (auth, todo, richText)
-└── README.md
-```
-
-## Running Locally
+**Prerequisites:** Node.js 18+ and a MongoDB connection string (local or Atlas).
 
 Run the two apps in separate terminals.
 
@@ -130,11 +90,18 @@ Run the two apps in separate terminals.
 ```bash
 cd backend
 npm install
-cp .env.example .env   # then fill in the values
-npm run dev
+cp .env.example .env      # fill in the values below
+npm run dev               # http://localhost:5000
 ```
 
-The API starts on `http://localhost:5000`.
+`backend/.env`:
+
+```env
+PORT=5000
+NODE_ENV=development
+MONGODB_URI=mongodb+srv://<user>:<password>@<cluster>/smart-todo
+JWT_SECRET=<a-long-random-secret>
+```
 
 **Frontend**
 
@@ -142,47 +109,210 @@ The API starts on `http://localhost:5000`.
 cd frontend
 npm install
 cp .env.example .env.local
-npm run dev
+npm run dev               # http://localhost:3000
 ```
 
-The app starts on `http://localhost:3000`.
+`frontend/.env.local`:
 
-## Environment Variables
+```env
+NEXT_PUBLIC_API_URL=http://localhost:5000
+```
 
-**Backend** (`backend/.env`)
+Secrets live only in `.env` / `.env.local` (git-ignored). Only `.env.example`
+templates are committed. In production, set `NEXT_PUBLIC_API_URL` in the Vercel
+dashboard to the deployed API URL.
 
-| Variable      | Description                          |
-| ------------- | ------------------------------------ |
-| `PORT`        | API port (default 5000)              |
-| `NODE_ENV`    | `development` / `production`         |
-| `MONGODB_URI` | MongoDB connection string           |
-| `JWT_SECRET`  | Secret used to sign access tokens    |
+---
 
-**Frontend** (`frontend/.env.local`)
+## Architecture
 
-| Variable              | Description                 |
-| --------------------- | --------------------------- |
-| `NEXT_PUBLIC_API_URL` | Base URL of the backend API |
+The frontend and backend are independent apps that communicate over HTTP. A single
+request flows through clearly separated layers:
 
-Real secrets live only in `.env` files, which are git-ignored. Only
-`.env.example` templates are committed.
+```
+Browser
+  → Next.js frontend (React components & pages)
+  → API client        (src/lib/api-client.ts — attaches the JWT, normalizes errors)
+  → Express routes    (/auth, /todos)
+  → Auth middleware   (verifies the JWT → req.user.id)
+  → Zod validation    (checks the request body / query)
+  → Controller        (owner-scoped logic)
+  → MongoDB / Mongoose
+```
 
-## Engineering Highlights
+**Project layout**
 
-- JWT authentication with bcrypt-hashed passwords and env-based secrets.
-- Zod validation at every API boundary.
-- Centralized frontend API client; feature-based folder structure.
-- Express middleware guarding protected routes.
-- User-specific ownership enforced in the database query.
-- Database-level pagination/filtering with a whitelisted sort field and an index
-  on the todo owner.
-- Tiptap JSON as the single source of truth for rich text, with one shared editor
-  configuration reused by the editor and preview.
-- Strict TypeScript across the whole project.
+```
+smart-todo/
+├── frontend/                         Next.js app (App Router)
+│   └── src/
+│       ├── app/                      routes: /, /login, /register, /todos
+│       ├── components/               ui/, shared/ (navbar), home/ (landing)
+│       ├── features/
+│       │   ├── auth/                 api, components, schemas, types
+│       │   └── todos/                api, components, editor config, utils, types
+│       ├── lib/                      api-client.ts, token.ts
+│       └── providers/                theme + auth (React context)
+└── backend/                          Express + TypeScript REST API
+    └── src/
+        ├── config/                   env, db, cookie
+        ├── controllers/              auth, todo
+        ├── middleware/               requireAuth, errorHandler
+        ├── models/                   user, todo, authSession
+        ├── routes/                   auth, todo
+        └── schemas/                  Zod schemas (auth, todo, richText)
+```
 
-## Current Scope / Limitations
+**Authentication.** Login verifies the password with `bcrypt.compare`, returns a
+short-lived (15 min) JWT access token in the response body, and sets a longer-lived
+(7 day) **opaque** refresh token in an HttpOnly, SameSite=Strict, `Path=/auth`
+cookie. Only the SHA-256 hash of the refresh token is stored; refresh rotates the
+token and detects reuse of a rotated token. The frontend uses simple access-token
+auth — it stores the access token and sends it as a `Bearer` header; auth state
+lives in a small React context.
 
-- No image upload or image nodes (intentionally removed from scope).
-- No search, collaboration, notifications, or analytics.
-- Simple access-token auth on the frontend (no automatic refresh flow yet).
-- Local development only; no deployment is configured in this repo.
+**Ownership.** Every todo read/update/delete query is scoped to
+`{ _id, userId }` using the id from the verified token — the client never sends or
+chooses an owner. Another user's todo returns `404` (not `403`) so the API never
+reveals that a given id exists.
+
+**Rich text.** Notes are edited with Tiptap and saved as a JSON document; a shared
+editor configuration is reused by both the editor and the read-only preview.
+Because Tiptap can emit `null` attributes that the strict backend schema rejects,
+the frontend runs a small `cleanContent()` step before saving:
+
+```
+Tiptap editor → editor.getJSON() → cleanContent() → API client → Express → Zod → MongoDB
+```
+
+**Pagination / filtering / sorting.** Listing is done in the database
+(`skip`/`limit`, an optional `completed` filter, and a whitelisted `sort`), and the
+API returns pagination metadata alongside the page of results.
+
+---
+
+## API Reference
+
+Base URL: `http://localhost:5000` (local) or the deployed API URL. All `/todos`
+routes and `GET /auth/me` require an `Authorization: Bearer <accessToken>` header.
+
+### Auth
+
+**`POST /auth/register`**
+
+```json
+// request
+{ "email": "user@example.com", "password": "at-least-8-chars" }
+// 201
+{ "id": "665f...", "email": "user@example.com" }
+```
+
+**`POST /auth/login`**
+
+```json
+// request
+{ "email": "user@example.com", "password": "at-least-8-chars" }
+// 200 (also sets an HttpOnly refreshToken cookie)
+{ "accessToken": "<jwt>", "user": { "id": "665f...", "email": "user@example.com" } }
+```
+
+**`POST /auth/refresh`** — rotates the refresh cookie, returns a fresh access token.
+**`POST /auth/logout`** — invalidates the session and clears the cookie.
+**`GET /auth/me`** — returns `{ "user": { "id", "email" } }` for the current user.
+
+### Todos
+
+**`GET /todos`** — query: `page`, `limit` (max 50), `completed` (`true|false`),
+`sort` (`createdAt|-createdAt`).
+
+```json
+// 200
+{
+  "data": [
+    {
+      "id": "6661...",
+      "userId": "665f...",
+      "title": "Read the docs",
+      "content": { "type": "doc", "content": [ /* ... */ ] },
+      "completed": false,
+      "createdAt": "2026-01-01T00:00:00.000Z",
+      "updatedAt": "2026-01-01T00:00:00.000Z"
+    }
+  ],
+  "pagination": {
+    "page": 1, "limit": 10, "total": 1, "totalPages": 1,
+    "hasNextPage": false, "hasPreviousPage": false
+  }
+}
+```
+
+**`POST /todos`**
+
+```json
+// request (content optional; defaults to an empty document)
+{ "title": "Read the docs", "content": { "type": "doc", "content": [] } }
+// 201
+{ "todo": { "id": "6661...", "title": "Read the docs", "completed": false, /* ... */ } }
+```
+
+**`GET /todos/:id`** — `{ "todo": { ... } }`, or `404` if not yours.
+**`PATCH /todos/:id`** — partial update, e.g. `{ "completed": true }` or
+`{ "title": "...", "content": { ... } }`. Returns the updated todo.
+**`DELETE /todos/:id`** — `204 No Content`, or `404` if not yours.
+
+Validation failures return `400` with a list of field errors; a missing/invalid
+token returns `401`.
+
+---
+
+## Quirks & Gotchas
+
+Real issues encountered while building this, and how they're handled:
+
+1. **Tiptap emits `null` attributes.** `editor.getJSON()` can produce
+   `color: null`, `fontWeight: null`, or an ordered list `type: null`. The backend
+   schema is strict and rejects these, so `cleanContent()` drops null/undefined
+   attributes before every save. (Verified: raw output → `400`, cleaned → `201`.)
+2. **`data-checked` vs strikethrough.** A checked Tiptap task item renders as
+   `<li data-checked="true">`, but a plain bullet/ordered list item has no such
+   attribute. Completing a todo therefore strikes out the *whole* note (via a
+   `.preview-completed` class) so lists without checkboxes still read as done.
+3. **Cross-origin refresh cookies.** The backend sets an HttpOnly, `Path=/auth`
+   refresh cookie, but the frontend runs on a different origin (Vercel vs Render)
+   and does not rely on it. The frontend uses simple access-token auth; a full
+   cookie-based refresh flow is deferred.
+4. **Base-URL trailing slashes.** `NEXT_PUBLIC_API_URL` may end in `/`. The API
+   client strips trailing slashes so a path like `/todos` never becomes
+   `//todos`, and never falls back to `localhost` in production.
+5. **404, not 403, for other users' todos.** Returning `403` would confirm an id
+   exists. Owner-scoped queries return `404` for both "missing" and "not yours".
+6. **Whitelisted sort.** Only `createdAt` / `-createdAt` are accepted, so the
+   client can't sort by arbitrary internal fields.
+
+---
+
+## Design Decisions & Trade-offs
+
+- **Simplicity over cleverness.** Small components, obvious data flow, plain
+  `useState`/`useEffect`, and a re-fetch after each mutation instead of a
+  data-fetching library — the code is meant to be read and modified easily.
+- **Access token in `localStorage`.** Convenient and works cross-origin, but less
+  XSS-hardened than an HttpOnly cookie. Acceptable for this project's scope; see
+  below.
+- **Images removed from scope.** Image upload/storage was intentionally cut to
+  avoid the added complexity (storage, sanitization) without enough value here.
+
+### What I'd improve with more time
+
+- Move the frontend to a cookie-based session with automatic token refresh.
+- Add automated tests (unit + a few end-to-end flows).
+- Add search and tags for todos.
+- Server-render the authenticated area behind a proper session.
+
+---
+
+## Status
+
+Backend deployed on Render; frontend deploys to Vercel. This is a portfolio
+project — no fabricated metrics, screenshots, or third-party integrations are
+claimed; everything documented here maps to code in this repository.
