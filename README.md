@@ -9,7 +9,7 @@ features to follow.
 ## Tech Stack
 
 **Frontend** — Next.js (App Router), TypeScript, Tailwind CSS, React Hook Form,
-Zod, Auth.js / NextAuth.
+Zod, Tiptap (rich-text editor), next-themes (light/dark).
 
 **Backend** — Express.js, TypeScript, MongoDB, Zod.
 
@@ -23,8 +23,14 @@ smart-todo/
 ```
 
 The frontend and backend are independent apps. The frontend renders the UI and
-calls the backend over HTTP using the native `fetch` API, so each app can be
-developed, run, and deployed on its own.
+calls the backend over HTTP using the native `fetch` API (through a single
+`src/lib/api-client.ts`), so each app can be developed, run, and deployed on its
+own.
+
+The frontend currently implements: register/login with JWT access tokens,
+a client-protected todo page, a light/dark theme toggle, and a Tiptap rich-text
+editor (headings, bold, italic, text color, font weight, bullet/ordered lists,
+and task-list checkboxes) whose structured JSON is saved to the backend.
 
 ## Running Locally
 
