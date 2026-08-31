@@ -18,7 +18,6 @@
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
 }
 
 body {
@@ -61,4 +60,123 @@ body {
   display: flex;
   align-items: flex-start;
   gap: 0.5rem;
+}
+/* A checked task item's text is crossed out with a single line. */
+.ProseMirror ul[data-type="taskList"] li[data-checked="true"] > div {
+  text-decoration: line-through;
+  opacity: 0.6;
+}
+
+/* A completed todo's whole note is crossed out — paragraphs, headings, and
+   bullet/ordered lists too, not just checkboxes — so it reads as "done". */
+.preview-completed {
+  opacity: 0.65;
+}
+.preview-completed .ProseMirror,
+.preview-completed .ProseMirror * {
+  text-decoration: line-through;
+}
+
+/* ---------------------------------------------------------------------------
+   Homepage (Phase 11) — lightweight, dependency-free animations.
+   Everything is an *enhancement*: content is fully visible without motion,
+   and all motion is disabled for users who prefer reduced motion.
+--------------------------------------------------------------------------- */
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes float-y {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-14px);
+  }
+}
+
+@keyframes blob-drift {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  33% {
+    transform: translate(20px, -18px) scale(1.06);
+  }
+  66% {
+    transform: translate(-16px, 12px) scale(0.96);
+  }
+}
+
+@keyframes gradient-pan {
+  from {
+    background-position: 0% 50%;
+  }
+  to {
+    background-position: 100% 50%;
+  }
+}
+
+/* Gradient headline. Falls back to a solid colour where background-clip:text
+   is unsupported, so the text is never invisible. */
+.gradient-text {
+  color: #2563eb;
+}
+@supports ((-webkit-background-clip: text) or (background-clip: text)) {
+  .gradient-text {
+    background-image: linear-gradient(90deg, #2563eb, #7c3aed, #2563eb);
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  /* On-load entrance (used in the hero). */
+  .animate-fade-up {
+    opacity: 0;
+    animation: fade-up 0.7s ease-out forwards;
+  }
+
+  .float-slow {
+    animation: float-y 6s ease-in-out infinite;
+  }
+
+  .blob {
+    animation: blob-drift 18s ease-in-out infinite;
+  }
+
+  .gradient-text {
+    animation: gradient-pan 6s linear infinite alternate;
+  }
+
+  /* Scroll-reveal via pure CSS scroll-driven animations. Only applied where the
+     browser supports it; otherwise the content simply renders normally. */
+  @supports (animation-timeline: view()) {
+    .reveal {
+      animation: fade-up 0.8s ease-out both;
+      animation-timeline: view();
+      animation-range: entry 0% cover 25%;
+    }
+  }
+}
+
+/* Never hide content when motion is reduced. */
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-up,
+  .reveal {
+    opacity: 1 !important;
+    transform: none !important;
+    animation: none !important;
+  }
 }

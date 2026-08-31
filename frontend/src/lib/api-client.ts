@@ -46,7 +46,6 @@ interface RequestOptions {
 // --- Configuration ----------------------------------------------------------
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000";
-const IS_DEV = process.env.NODE_ENV !== "production";
 
 // --- Internal helpers -------------------------------------------------------
 
@@ -93,8 +92,6 @@ async function request<T>(
   const url = `${BASE_URL}${path}`;
   const hasBody = body !== undefined;
 
-  if (IS_DEV) console.log(`[api] ${method} ${path}`);
-
   let response: Response;
   try {
     response = await fetch(url, {
@@ -112,9 +109,7 @@ async function request<T>(
   const parsed = await parseResponseBody(response);
 
   if (!response.ok) {
-    const error = normalizeError(response.status, parsed);
-    if (IS_DEV) console.warn(`[api] ${method} ${path} -> ${response.status}`);
-    throw error;
+    throw normalizeError(response.status, parsed);
   }
 
   return parsed as T;

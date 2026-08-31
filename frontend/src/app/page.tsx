@@ -1,22 +1,21 @@
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
+import { Hero } from "@/components/home/hero";
+import { FeaturesSection } from "@/components/home/features-section";
+import { TechStackSection } from "@/components/home/tech-stack-section";
+import { EngineeringSection } from "@/components/home/engineering-section";
+import { ArchitectureSection } from "@/components/home/architecture-section";
+import { CtaSection } from "@/components/home/cta-section";
 
+// The homepage is a Server Component — it's static marketing content with no
+// interactivity, so it ships no client-side JavaScript of its own.
 export default function Home() {
   return (
-    <div className="mx-auto max-w-3xl px-4 py-16 text-center">
-      <h1 className="text-3xl font-semibold">Smart Todo</h1>
-      <p className="mt-3 text-zinc-600 dark:text-zinc-400">
-        Write todos with rich-text notes — headings, lists, checkboxes, colors,
-        and more.
-      </p>
-      <div className="mt-8 flex justify-center gap-3">
-        <Link href="/todos">
-          <Button variant="primary">Go to your todos</Button>
-        </Link>
-        <Link href="/register">
-          <Button variant="secondary">Create an account</Button>
-        </Link>
-      </div>
-    </div>
+    <>
+      <Hero />
+      <FeaturesSection />
+      <TechStackSection />
+      <EngineeringSection />
+      <ArchitectureSection />
+      <CtaSection />
+    </>
   );
 }

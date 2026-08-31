@@ -40,10 +40,11 @@ export function TodoList({
   return (
     <ul className="flex flex-col gap-3">
       {todos.map((todo) => (
-        // Key includes updatedAt so an edited todo remounts and its preview
-        // re-renders with the new content.
+        // Key by the stable id so toggling/refetching does NOT remount the card
+        // (remounting the Tiptap preview causes a flash/jump). The preview keeps
+        // itself in sync with content changes internally.
         <TodoItem
-          key={`${todo.id}:${todo.updatedAt}`}
+          key={todo.id}
           todo={todo}
           busy={busyId === todo.id}
           onToggle={onToggle}

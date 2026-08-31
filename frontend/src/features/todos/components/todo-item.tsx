@@ -47,7 +47,7 @@ export function TodoItem({
       </div>
 
       <div className="mt-2 border-t border-zinc-100 pt-2 dark:border-zinc-800">
-        <TodoPreview content={todo.content} />
+        <TodoPreview content={todo.content} completed={todo.completed} />
       </div>
 
       <p className="mt-2 text-xs text-zinc-400">Updated {updated}</p>
@@ -60,7 +60,14 @@ export function TodoItem({
         >
           {todo.completed ? "Mark active" : "Mark complete"}
         </Button>
-        <Button variant="ghost" onClick={() => onEdit(todo)} disabled={busy}>
+        <Button
+          variant="ghost"
+          onClick={() => onEdit(todo)}
+          disabled={busy || todo.completed}
+          title={
+            todo.completed ? "Mark this todo active to edit it" : undefined
+          }
+        >
           Edit
         </Button>
         <Button

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/providers/auth-provider";
 import { ApiError } from "@/lib/api-client";
 import { getTodos, updateTodo, deleteTodo } from "../api/todos-api";
+import { checkAllTaskItems } from "../utils/task-content";
 import {
   type Todo,
   type TodoFilter,
@@ -14,6 +15,7 @@ import { TodoForm } from "./todo-form";
 import { TodoList } from "./todo-list";
 import { TodoFilterBar } from "./todo-filter";
 import { PaginationControls } from "./pagination-controls";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 
 type ListStatus = "loading" | "ready" | "error";
 
@@ -37,6 +39,7 @@ export function TodosManager() {
 
   const [editingTodo, setEditingTodo] = useState<Todo | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [pendingDelete, setPendingDelete] = useState<Todo | null>(null);
 
   // If a request comes back 401, the token is invalid/expired: log out and send
   // the user to sign in (the existing auth-provider behavior — no new auth here).
@@ -108,7 +111,16 @@ export function TodosManager() {
     setActionError(null);
     setBusyId(todo.id);
     try {
-      await updateTodo(todo.id, { completed: !todo.completed });
+      if (todo.completed) {
+        // Re-activating: just flip the status.
+        await updateTodo(todo.id, { completed: false });
+      } else {
+        // Completing: also tick every task-list checkbox in the content.
+        await updateTodo(todo.id, {
+          completed: true,
+          content: checkAllTaskItems(todo.content),
+        });
+      }
       reload();
     } catch (err) {
       if (err instanceof ApiError && err.status === 401) {
@@ -123,8 +135,11 @@ export function TodosManager() {
     }
   }
 
-  async function handleDelete(todo: Todo) {
-    if (!window.confirm("Are you sure you want to delete this todo?")) return;
+  // Clicking "Delete" opens the confirm modal; the actual delete runs only after
+  // the user confirms in the dialog.
+  async function confirmDelete() {
+    const todo = pendingDelete;
+    if (!todo) return;
 
     setActionError(null);
     setBusyId(todo.id);
@@ -137,6 +152,7 @@ export function TodosManager() {
         reload();
       }
       if (editingTodo?.id === todo.id) setEditingTodo(null);
+      setPendingDelete(null);
     } catch (err) {
       if (err instanceof ApiError && err.status === 401) {
         handleUnauthorized();
@@ -188,7 +204,7 @@ export function TodosManager() {
             busyId={busyId}
             onToggle={handleToggle}
             onEdit={setEditingTodo}
-            onDelete={handleDelete}
+            onDelete={setPendingDelete}
           />
           {pagination && pagination.total > 0 && (
             <PaginationControls
@@ -199,6 +215,17 @@ export function TodosManager() {
           )}
         </>
       )}
+
+      <ConfirmDialog
+        open={pendingDelete !== null}
+        title="Delete todo"
+        message="Are you sure you want to delete this todo? This can't be undone."
+        confirmLabel="Delete"
+        busyLabel="Deleting…"
+        busy={pendingDelete !== null && busyId === pendingDelete.id}
+        onConfirm={confirmDelete}
+        onCancel={() => setPendingDelete(null)}
+      />
     </div>
   );
 }

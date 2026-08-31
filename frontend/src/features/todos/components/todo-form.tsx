@@ -29,6 +29,8 @@ export function TodoForm({
   onUnauthorized,
 }: TodoFormProps) {
   const isEditing = Boolean(todo);
+  // Completed todos are read-only: you must mark them active before editing.
+  const isLocked = Boolean(todo?.completed);
 
   const [title, setTitle] = useState(todo?.title ?? "");
   const [isSaving, setIsSaving] = useState(false);
@@ -39,6 +41,7 @@ export function TodoForm({
   // not rebuild the document by hand.
   const editor = useEditor({
     immediatelyRender: false, // required for Next.js server rendering
+    editable: !isLocked,
     extensions: getTodoEditorExtensions(),
     content: todo?.content ?? EMPTY_DOC,
     editorProps: {
@@ -47,6 +50,7 @@ export function TodoForm({
   });
 
   async function handleSave() {
+    if (isLocked) return;
     setError(null);
     setSuccess(null);
 
@@ -105,12 +109,23 @@ export function TodoForm({
         value={title}
         onChange={(event) => setTitle(event.target.value)}
         placeholder="What needs doing?"
-        className="mb-4 w-full rounded-md border border-zinc-300 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-900"
+        disabled={isLocked}
+        className="mb-4 w-full rounded-md border border-zinc-300 px-3 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-60 dark:border-zinc-700 dark:bg-zinc-900"
       />
 
+      {isLocked && (
+        <p className="mb-3 rounded-md bg-zinc-100 px-3 py-2 text-sm text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
+          This todo is completed. Mark it active to edit it.
+        </p>
+      )}
+
       <div className="mb-1 block text-sm font-medium">Notes</div>
-      <div className="rounded-md border border-zinc-300 dark:border-zinc-700">
-        {editor && <EditorToolbar editor={editor} />}
+      <div
+        className={`rounded-md border border-zinc-300 dark:border-zinc-700 ${
+          isLocked ? "opacity-60" : ""
+        }`}
+      >
+        {editor && !isLocked && <EditorToolbar editor={editor} />}
         <EditorContent editor={editor} />
       </div>
 
@@ -122,7 +137,7 @@ export function TodoForm({
       )}
 
       <div className="mt-4 flex gap-2">
-        <Button onClick={handleSave} disabled={isSaving}>
+        <Button onClick={handleSave} disabled={isSaving || isLocked}>
           {isSaving
             ? "Saving…"
             : isEditing
