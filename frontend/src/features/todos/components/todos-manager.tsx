@@ -19,10 +19,6 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 
 type ListStatus = "loading" | "ready" | "error";
 
-// The stateful hub for the whole Todo page. It holds the list, the current
-// filter/page, and which todo (if any) is being edited. After every mutation it
-// simply re-fetches the current page from the backend, so the UI always matches
-// MongoDB without a data-fetching library.
 export function TodosManager() {
   const router = useRouter();
   const { logout } = useAuth();
@@ -41,8 +37,6 @@ export function TodosManager() {
   const [busyId, setBusyId] = useState<string | null>(null);
   const [pendingDelete, setPendingDelete] = useState<Todo | null>(null);
 
-  // If a request comes back 401, the token is invalid/expired: log out and send
-  // the user to sign in (the existing auth-provider behavior — no new auth here).
   function handleUnauthorized() {
     logout();
     router.replace("/login");
@@ -52,8 +46,6 @@ export function TodosManager() {
     setReloadKey((key) => key + 1);
   }
 
-  // Load the current page + filter whenever they change (or when we ask for a
-  // reload after a mutation).
   useEffect(() => {
     let cancelled = false;
 
@@ -83,8 +75,6 @@ export function TodosManager() {
     return () => {
       cancelled = true;
     };
-    // We intentionally reload only when the filter, page, or reload counter
-    // change. logout/router are stable enough for this simple page.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filter, page, reloadKey]);
 
@@ -101,7 +91,6 @@ export function TodosManager() {
     if (wasEditing) {
       reload();
     } else {
-      // A newly created todo is newest-first, so jump to page 1 to see it.
       setPage(1);
       reload();
     }
@@ -112,10 +101,8 @@ export function TodosManager() {
     setBusyId(todo.id);
     try {
       if (todo.completed) {
-        // Re-activating: just flip the status.
         await updateTodo(todo.id, { completed: false });
       } else {
-        // Completing: also tick every task-list checkbox in the content.
         await updateTodo(todo.id, {
           completed: true,
           content: checkAllTaskItems(todo.content),
@@ -135,8 +122,6 @@ export function TodosManager() {
     }
   }
 
-  // Clicking "Delete" opens the confirm modal; the actual delete runs only after
-  // the user confirms in the dialog.
   async function confirmDelete() {
     const todo = pendingDelete;
     if (!todo) return;
@@ -145,7 +130,6 @@ export function TodosManager() {
     setBusyId(todo.id);
     try {
       await deleteTodo(todo.id);
-      // If we just removed the last item on a later page, step back a page.
       if (todos.length === 1 && page > 1) {
         setPage(page - 1);
       } else {

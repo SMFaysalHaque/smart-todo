@@ -2,8 +2,6 @@
 
 import { type TodoFilter } from "../types";
 
-// Simple All / Active / Completed switch. Changing it re-queries the backend
-// (the parent resets to page 1) — we never filter the loaded list in the browser.
 
 const OPTIONS: { value: TodoFilter; label: string }[] = [
   { value: "all", label: "All" },

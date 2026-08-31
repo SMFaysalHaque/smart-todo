@@ -3,8 +3,6 @@
 import { Button } from "@/components/ui/button";
 import { type Pagination } from "../types";
 
-// Previous/Next controls driven entirely by the backend's pagination metadata.
-// Buttons disable themselves when there is no previous/next page.
 export function PaginationControls({
   pagination,
   onPrevious,

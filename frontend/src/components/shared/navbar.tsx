@@ -6,8 +6,6 @@ import { useAuth } from "@/providers/auth-provider";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 
-// Global navbar. It reads the auth state from context, so it updates itself the
-// moment the user logs in or out — no page reload needed.
 export function Navbar() {
   const { user, isLoading, logout } = useAuth();
   const router = useRouter();

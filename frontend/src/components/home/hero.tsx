@@ -1,7 +1,5 @@
 import Link from "next/link";
 
-// Static, product-inspired visual — NOT a working todo demo. It's a stylized
-// "note card" made of plain divs that hints at the rich-text editor.
 function HeroCard() {
   return (
     <div
@@ -58,7 +56,7 @@ function HeroCard() {
 export function Hero() {
   return (
     <section className="relative overflow-hidden">
-      {/* Decorative animated background blobs. */}
+      {}
       <div aria-hidden className="pointer-events-none absolute inset-0 -z-10">
         <div className="blob absolute -left-16 -top-24 h-72 w-72 rounded-full bg-gradient-to-br from-blue-400/30 to-violet-400/30 blur-3xl dark:from-blue-600/20 dark:to-violet-600/20" />
         <div

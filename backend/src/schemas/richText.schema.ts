@@ -1,8 +1,5 @@
 import { z } from "zod";
 
-// Rich-text content is stored as a Tiptap (ProseMirror) JSON document.
-// We validate a controlled subset of nodes and marks — only the features this
-// project actually supports — instead of trusting arbitrary editor JSON.
 
 const boldMark = z.object({ type: z.literal("bold") }).strict();
 const italicMark = z.object({ type: z.literal("italic") }).strict();
@@ -32,8 +29,6 @@ const hardBreakNode = z.object({ type: z.literal("hardBreak") }).strict();
 
 const inlineNode = z.union([textNode, hardBreakNode]);
 
-// blockNode is recursive (lists contain items that contain blocks), so it is
-// defined lazily.
 const blockNode: z.ZodType = z.lazy(() =>
   z.discriminatedUnion("type", [
     paragraphNode,

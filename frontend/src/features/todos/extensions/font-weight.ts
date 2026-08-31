@@ -1,10 +1,5 @@
 import { Extension } from "@tiptap/core";
 
-// Tiptap has no built-in "font weight" feature, but our backend's `textStyle`
-// mark accepts a `fontWeight` attribute. This small extension adds a
-// `fontWeight` attribute onto the existing `textStyle` mark (the same pattern
-// Tiptap's official FontFamily extension uses), plus two commands to set/clear
-// it. That keeps the saved JSON matching the backend contract exactly.
 
 declare module "@tiptap/core" {
   interface Commands<ReturnType> {

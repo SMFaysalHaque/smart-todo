@@ -9,8 +9,6 @@ import {
   DatabaseIcon,
 } from "./icons";
 
-// A simple, honest representation of how a request actually flows through the
-// real application.
 const STEPS = [
   { icon: BrowserIcon, label: "Browser", detail: "User interacts with the UI" },
   { icon: CodeIcon, label: "Next.js frontend", detail: "React components & pages" },

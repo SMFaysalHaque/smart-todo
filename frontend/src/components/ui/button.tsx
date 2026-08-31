@@ -1,7 +1,5 @@
 import { type ButtonHTMLAttributes } from "react";
 
-// A tiny reusable button so we don't repeat the same Tailwind classes
-// everywhere. Not a full design system — just three common looks.
 
 type Variant = "primary" | "secondary" | "ghost" | "danger";
 

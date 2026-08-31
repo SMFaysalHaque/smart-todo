@@ -11,7 +11,6 @@ import {
   MoonIcon,
 } from "./icons";
 
-// Only features that actually exist in the project are listed here.
 const FEATURES = [
   {
     icon: ShieldIcon,
@@ -85,7 +84,7 @@ export function FeaturesSection() {
         />
 
         <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {/* Rich-text editor gets a wider highlight card. */}
+          {}
           <article className="reveal rounded-xl border border-zinc-200 p-6 transition hover:-translate-y-1 hover:shadow-lg sm:col-span-2 dark:border-zinc-800">
             <div className="flex items-center gap-3">
               <span className="grid h-10 w-10 place-items-center rounded-lg bg-blue-50 text-blue-600 dark:bg-blue-950 dark:text-blue-400">

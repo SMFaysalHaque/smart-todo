@@ -24,8 +24,6 @@ export function RegisterForm() {
     setFormError(null);
     try {
       await registerUser(values.email, values.password);
-      // The backend does not return a token on register, so send the user to
-      // the sign-in page (with a small success flag).
       router.push("/login?registered=1");
     } catch (error) {
       setFormError(

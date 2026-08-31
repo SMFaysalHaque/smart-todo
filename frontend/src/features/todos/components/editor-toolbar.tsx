@@ -1,10 +1,6 @@
 "use client";
 
 import { type Editor } from "@tiptap/react";
-import { Button } from "@/components/ui/button";
-
-// A simple toolbar that drives the Tiptap editor instance. Each button calls a
-// command on the editor; active buttons are highlighted using editor.isActive.
 
 function ToolbarButton({
   onClick,
@@ -31,8 +27,6 @@ function ToolbarButton({
 }
 
 export function EditorToolbar({ editor }: { editor: Editor }) {
-  // The current heading level (0 = paragraph) so the dropdown reflects the
-  // cursor's block.
   const currentBlock = editor.isActive("heading", { level: 1 })
     ? "1"
     : editor.isActive("heading", { level: 2 })
@@ -99,7 +93,6 @@ export function EditorToolbar({ editor }: { editor: Editor }) {
         ☑ Tasks
       </ToolbarButton>
 
-      {/* Text color: the native color picker sets the textStyle color mark. */}
       <label className="flex items-center gap-1 text-sm">
         Color
         <input
@@ -112,7 +105,6 @@ export function EditorToolbar({ editor }: { editor: Editor }) {
         />
       </label>
 
-      {/* Font weight: Normal (400) or Bold weight (700) via textStyle. */}
       <select
         aria-label="Font weight"
         onChange={(event) => {

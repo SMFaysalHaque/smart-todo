@@ -1,5 +1,3 @@
-// Small inline SVG icons for the homepage. Using inline SVG avoids adding an
-// icon-library dependency. All icons are decorative, so they are aria-hidden.
 
 type IconProps = { className?: string };
 

@@ -1,8 +1,3 @@
-// Small helpers for storing the JWT access token in the browser.
-//
-// The token is kept in localStorage so it survives a page refresh. These
-// helpers are SSR-safe: on the server there is no `window`, so they simply do
-// nothing / return null instead of crashing.
 
 const ACCESS_TOKEN_KEY = "smart-todo.accessToken";
 

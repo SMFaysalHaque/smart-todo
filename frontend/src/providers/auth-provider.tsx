@@ -15,9 +15,6 @@ import {
 } from "@/lib/token";
 import { type AuthUser } from "@/features/auth/types";
 
-// Holds the current auth state in React so any component (e.g. the navbar) can
-// read it and re-render automatically when the user logs in or out. This uses
-// React's built-in context only — no external state library.
 
 interface AuthContextValue {
   user: AuthUser | null;
@@ -32,8 +29,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // On first load: if a token is already stored, ask the backend who we are.
-  // If the token is missing or invalid, we simply stay logged out.
   useEffect(() => {
     const token = getAccessToken();
     if (!token) {
@@ -53,12 +48,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   async function logout(): Promise<void> {
-    // Best-effort backend logout; the access token is client-side, so the real
-    // logout is dropping it locally.
     try {
       await api.post("/auth/logout");
     } catch {
-      // ignore — we still clear the local session below
     }
     clearAccessToken();
     setUser(null);

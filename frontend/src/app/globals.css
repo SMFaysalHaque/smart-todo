@@ -1,7 +1,5 @@
 @import "tailwindcss";
 
-/* next-themes adds a `dark` class on <html>. Tell Tailwind v4 to treat that
-   class (not the OS media query) as the dark-mode signal. */
 @custom-variant dark (&:where(.dark, .dark *));
 
 :root {
@@ -26,8 +24,6 @@ body {
   font-family: var(--font-sans), Arial, Helvetica, sans-serif;
 }
 
-/* Minimal styles so the rich-text editor content is readable. Tiptap renders
-   into an element with the `ProseMirror` class. */
 .ProseMirror {
   outline: none;
   min-height: 8rem;
@@ -61,14 +57,11 @@ body {
   align-items: flex-start;
   gap: 0.5rem;
 }
-/* A checked task item's text is crossed out with a single line. */
 .ProseMirror ul[data-type="taskList"] li[data-checked="true"] > div {
   text-decoration: line-through;
   opacity: 0.6;
 }
 
-/* A completed todo's whole note is crossed out — paragraphs, headings, and
-   bullet/ordered lists too, not just checkboxes — so it reads as "done". */
 .preview-completed {
   opacity: 0.65;
 }
@@ -77,11 +70,6 @@ body {
   text-decoration: line-through;
 }
 
-/* ---------------------------------------------------------------------------
-   Homepage (Phase 11) — lightweight, dependency-free animations.
-   Everything is an *enhancement*: content is fully visible without motion,
-   and all motion is disabled for users who prefer reduced motion.
---------------------------------------------------------------------------- */
 
 @keyframes fade-up {
   from {
@@ -126,8 +114,6 @@ body {
   }
 }
 
-/* Gradient headline. Falls back to a solid colour where background-clip:text
-   is unsupported, so the text is never invisible. */
 .gradient-text {
   color: #2563eb;
 }
@@ -142,7 +128,6 @@ body {
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  /* On-load entrance (used in the hero). */
   .animate-fade-up {
     opacity: 0;
     animation: fade-up 0.7s ease-out forwards;
@@ -160,8 +145,6 @@ body {
     animation: gradient-pan 6s linear infinite alternate;
   }
 
-  /* Scroll-reveal via pure CSS scroll-driven animations. Only applied where the
-     browser supports it; otherwise the content simply renders normally. */
   @supports (animation-timeline: view()) {
     .reveal {
       animation: fade-up 0.8s ease-out both;
@@ -171,7 +154,6 @@ body {
   }
 }
 
-/* Never hide content when motion is reduced. */
 @media (prefers-reduced-motion: reduce) {
   .animate-fade-up,
   .reveal {

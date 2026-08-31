@@ -123,9 +123,6 @@ export async function refresh(
     const session = await AuthSessionModel.findOne({ tokenHash });
 
     if (!session) {
-      // The token matches no active session. If it was the immediately
-      // previous (already-rotated) token, this is a reuse attempt: destroy
-      // that session so a stolen token cannot be leveraged further.
       const reused = await AuthSessionModel.findOne({
         previousTokenHash: tokenHash,
       });

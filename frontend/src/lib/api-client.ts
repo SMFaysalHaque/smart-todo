@@ -1,31 +1,12 @@
-// ---------------------------------------------------------------------------
-// Centralized API client
-//
-// This is the ONE place that talks to the backend over HTTP. Every feature
-// imports the exported `api` object and calls api.get / api.post / api.patch /
-// api.put / api.delete. Keeping all HTTP logic here means the rest of the app
-// never touches `fetch`, headers, or error shapes directly.
-//
-// Responsibilities:
-//   - read the base URL from the environment
-//   - attach the logged-in user's access token as a Bearer header
-//   - send/parse JSON
-//   - normalize every failure into a single ApiError shape
-//   - log requests in development only
-// ---------------------------------------------------------------------------
 
 import { getAccessToken } from "./token";
 
-// --- Types ------------------------------------------------------------------
 
 export interface ApiErrorDetail {
   field: string;
   message: string;
 }
 
-// A single, predictable error type for the whole app. The UI can read
-// `error.message` for a human-readable message and `error.status` to branch
-// (e.g. 401 -> redirect to login).
 export class ApiError extends Error {
   readonly status: number;
   readonly details?: ApiErrorDetail[];
@@ -39,28 +20,19 @@ export class ApiError extends Error {
 }
 
 interface RequestOptions {
-  // Optional AbortController signal so a caller can cancel the request.
   signal?: AbortSignal;
 }
 
-// --- Configuration ----------------------------------------------------------
 
-// The backend base URL comes from the environment so the same code runs against
-// a local backend in development and the deployed backend in production. Any
-// trailing slash is stripped so a path like "/todos" never produces "//todos".
 const configuredBaseUrl = process.env.NEXT_PUBLIC_API_URL?.trim().replace(
   /\/+$/,
   "",
 );
 
-// In development we fall back to the local backend for convenience. In
-// production the URL must be provided via NEXT_PUBLIC_API_URL (set in Vercel),
-// so production never depends on localhost.
 const BASE_URL =
   configuredBaseUrl ||
   (process.env.NODE_ENV === "production" ? "" : "http://localhost:5000");
 
-// --- Internal helpers -------------------------------------------------------
 
 function buildHeaders(hasBody: boolean): Record<string, string> {
   const headers: Record<string, string> = {};
@@ -74,7 +46,7 @@ function buildHeaders(hasBody: boolean): Record<string, string> {
 
 async function parseResponseBody(response: Response): Promise<unknown> {
   const text = await response.text();
-  if (!text) return null; // e.g. 204 No Content
+  if (!text) return null;
   try {
     return JSON.parse(text);
   } catch {
@@ -83,7 +55,6 @@ async function parseResponseBody(response: Response): Promise<unknown> {
 }
 
 function normalizeError(status: number, body: unknown): ApiError {
-  // The backend sends { error: "..." } and sometimes { error, details: [...] }.
   if (body && typeof body === "object" && "error" in body) {
     const shaped = body as { error?: unknown; details?: unknown };
     const message =
@@ -114,8 +85,6 @@ async function request<T>(
       signal: options?.signal,
     });
   } catch {
-    // fetch only rejects on network-level problems (server down, offline, CORS,
-    // aborted). Turn that into our normal error shape too.
     throw new ApiError(0, "Network error. Please check your connection.");
   }
 
@@ -128,7 +97,6 @@ async function request<T>(
   return parsed as T;
 }
 
-// --- Public interface -------------------------------------------------------
 
 export const api = {
   get: <T>(path: string, options?: RequestOptions) =>

@@ -1,5 +1,3 @@
-// Consistent section header (eyebrow + title + optional subtitle) reused across
-// the homepage sections.
 export function SectionHeading({
   eyebrow,
   title,

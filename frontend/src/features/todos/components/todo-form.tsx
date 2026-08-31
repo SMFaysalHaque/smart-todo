@@ -10,10 +10,6 @@ import { Button } from "@/components/ui/button";
 import { EditorToolbar } from "./editor-toolbar";
 import { type Todo } from "../types";
 
-// One reusable form for both creating and editing a todo. The only difference
-// is whether a `todo` is passed in (edit) or not (create). The parent remounts
-// this component (via a React key) when switching todos, so the editor always
-// initializes from the correct content.
 
 interface TodoFormProps {
   todo?: Todo | null;
@@ -29,7 +25,6 @@ export function TodoForm({
   onUnauthorized,
 }: TodoFormProps) {
   const isEditing = Boolean(todo);
-  // Completed todos are read-only: you must mark them active before editing.
   const isLocked = Boolean(todo?.completed);
 
   const [title, setTitle] = useState(todo?.title ?? "");
@@ -37,10 +32,8 @@ export function TodoForm({
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
-  // Tiptap can accept the stored JSON directly as its initial content — we do
-  // not rebuild the document by hand.
   const editor = useEditor({
-    immediatelyRender: false, // required for Next.js server rendering
+    immediatelyRender: false,
     editable: !isLocked,
     extensions: getTodoEditorExtensions(),
     content: todo?.content ?? EMPTY_DOC,
@@ -67,15 +60,12 @@ export function TodoForm({
 
     setIsSaving(true);
     try {
-      // Content comes straight from the editor, then null attributes are dropped
-      // so the backend's strict schema accepts it.
       const content = cleanContent(editor.getJSON());
 
       if (todo) {
         await updateTodo(todo.id, { title: trimmedTitle, content });
       } else {
         await createTodo({ title: trimmedTitle, content });
-        // Reset the create form for the next todo.
         setTitle("");
         editor.commands.setContent(EMPTY_DOC);
         setSuccess("Todo created.");

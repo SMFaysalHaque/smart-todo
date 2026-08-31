@@ -1,8 +1,5 @@
 import { z } from "zod";
 
-// Client-side form validation. These mirror the backend rules so the user gets
-// instant feedback, but the backend still validates again (never trust the
-// client alone).
 
 export const loginSchema = z.object({
   email: z.string().min(1, "Email is required").email("Enter a valid email"),

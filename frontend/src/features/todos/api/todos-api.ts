@@ -7,15 +7,11 @@ import {
   type TodoFilter,
 } from "../types";
 
-// All todo HTTP calls live here as small named functions on top of the shared
-// api client. UI components call these — never `fetch` directly.
 
 export function createTodo(input: CreateTodoInput) {
   return api.post<TodoResponse>("/todos", input);
 }
 
-// Builds the query string from the current page + filter and lets the backend
-// do the pagination/filtering (never in the browser).
 export function getTodos(page: number, filter: TodoFilter) {
   const params = new URLSearchParams();
   params.set("page", String(page));

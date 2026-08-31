@@ -4,9 +4,6 @@ import { Button } from "@/components/ui/button";
 import { TodoPreview } from "./todo-preview";
 import { type Todo } from "../types";
 
-// A single todo card: title, completed badge, a read-only rich-text preview,
-// last-updated time, and the three actions (toggle complete, edit, delete).
-// All actions are disabled while this card has a request in flight (`busy`).
 
 interface TodoItemProps {
   todo: Todo;

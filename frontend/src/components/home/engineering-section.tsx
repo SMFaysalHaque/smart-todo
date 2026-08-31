@@ -1,7 +1,6 @@
 import { SectionHeading } from "./section-heading";
 import { CheckCircleIcon } from "./icons";
 
-// Each point corresponds to something that actually exists in the codebase.
 const HIGHLIGHTS = [
   "JWT-based authentication with short-lived access tokens",
   "Passwords hashed with bcrypt — never stored in plain text",
