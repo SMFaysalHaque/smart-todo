@@ -27,10 +27,13 @@ calls the backend over HTTP using the native `fetch` API (through a single
 `src/lib/api-client.ts`), so each app can be developed, run, and deployed on its
 own.
 
-The frontend currently implements: register/login with JWT access tokens,
-a client-protected todo page, a light/dark theme toggle, and a Tiptap rich-text
-editor (headings, bold, italic, text color, font weight, bullet/ordered lists,
-and task-list checkboxes) whose structured JSON is saved to the backend.
+The frontend currently implements: register/login with JWT access tokens, a
+client-protected todo area, and full per-user todo management — create, list,
+edit, mark complete/incomplete, and delete — with backend-driven filtering (all /
+active / completed) and pagination. Todo notes use a Tiptap rich-text editor
+(headings, bold, italic, text color, font weight, bullet/ordered lists, and
+task-list checkboxes); the editor's structured JSON is saved to and rendered from
+the backend. A light/dark theme toggle is available in the navbar.
 
 ## Running Locally
 

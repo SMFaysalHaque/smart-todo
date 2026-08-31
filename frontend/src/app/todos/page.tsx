@@ -3,11 +3,11 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/providers/auth-provider";
-import { CreateTodoForm } from "@/features/todos/components/create-todo-form";
+import { TodosManager } from "@/features/todos/components/todos-manager";
 
 // Protected page. Because the access token lives on the client, we guard here:
-// while auth is loading we show nothing; once we know there is no user we send
-// them to the sign-in page. Only an authenticated user sees the editor.
+// while auth is loading we show nothing useful; once we know there is no user we
+// send them to sign in. Only an authenticated user sees the todo manager.
 export default function TodosPage() {
   const { user, isLoading } = useAuth();
   const router = useRouter();
@@ -23,9 +23,8 @@ export default function TodosPage() {
   }
 
   if (!user) {
-    // Redirect is in flight; render nothing to avoid a flash of the editor.
-    return null;
+    return null; // redirect in flight
   }
 
-  return <CreateTodoForm />;
+  return <TodosManager />;
 }

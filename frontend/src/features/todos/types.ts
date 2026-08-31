@@ -13,12 +13,39 @@ export interface Todo {
   updatedAt: string;
 }
 
+// POST /todos body
 export interface CreateTodoInput {
   title: string;
   content: JSONContent;
 }
 
-// POST /todos
-export interface CreateTodoResponse {
+// PATCH /todos/:id body — only the fields being changed are sent.
+export interface UpdateTodoInput {
+  title?: string;
+  content?: JSONContent;
+  completed?: boolean;
+}
+
+// Backend response for a single todo (POST, GET :id, PATCH).
+export interface TodoResponse {
   todo: Todo;
 }
+
+// Pagination metadata returned by GET /todos.
+export interface Pagination {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+  hasNextPage: boolean;
+  hasPreviousPage: boolean;
+}
+
+// Backend response for the list endpoint.
+export interface ListTodosResponse {
+  data: Todo[];
+  pagination: Pagination;
+}
+
+// UI filter for completion status.
+export type TodoFilter = "all" | "active" | "completed";
