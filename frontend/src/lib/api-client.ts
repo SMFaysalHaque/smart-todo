@@ -45,7 +45,20 @@ interface RequestOptions {
 
 // --- Configuration ----------------------------------------------------------
 
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000";
+// The backend base URL comes from the environment so the same code runs against
+// a local backend in development and the deployed backend in production. Any
+// trailing slash is stripped so a path like "/todos" never produces "//todos".
+const configuredBaseUrl = process.env.NEXT_PUBLIC_API_URL?.trim().replace(
+  /\/+$/,
+  "",
+);
+
+// In development we fall back to the local backend for convenience. In
+// production the URL must be provided via NEXT_PUBLIC_API_URL (set in Vercel),
+// so production never depends on localhost.
+const BASE_URL =
+  configuredBaseUrl ||
+  (process.env.NODE_ENV === "production" ? "" : "http://localhost:5000");
 
 // --- Internal helpers -------------------------------------------------------
 
